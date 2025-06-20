@@ -1,64 +1,42 @@
-/* eslint-disable prettier/prettier */
 import {
   Controller,
   Get,
   Post,
+  Body,
+  Param,
   Put,
   Delete,
-  Param,
-  Body,
-  NotFoundException,
-  BadRequestException,
-  } from '@nestjs/common';
-  import { MatakuliahService } from './matakuliah.services';
-  import { CreateMatakuliahDto } from './dto/create-matakuliah.dto';
-  import { UpdateMatakuliahDto } from './dto/update-matakuliah.dto';
-  @Controller('matakuliah')
-  export class MatakuliahController {
-  constructor(private readonly service: MatakuliahService) {}
+} from "@nestjs/common";
+import { MahasiswaService } from "./mahasiswa.service";
+import { CreateMahasiswaDto } from "./dto/create-mahasiswa.dto";
+import { UpdateMahasiswaDto } from "./dto/update-mahasiswa.dto";
+
+@Controller("mahasiswa")
+export class MahasiswaController {
+  constructor(private readonly service: MahasiswaService) {}
+
   @Get()
   findAll() {
-  return this.service.findAll();
+    return this.service.findAll();
   }
-  @Get(':kode')
-  findOne(@Param('kode') kode: string) {
-  const mt = this.service.findOne(kode);
-  if (!mt) {
-  throw new NotFoundException(
-  `Matakuliah dengan Kode ${kode} tidak ditemukan`,
-  );
+
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.service.findOne(+id);
   }
-  return mt;
-  }
+
   @Post()
-  create(@Body() dto: CreateMatakuliahDto) {
-  return this.service.create(dto);
+  create(@Body() dto: CreateMahasiswaDto) {
+    return this.service.create(dto);
   }
-  @Put(':kode')
-  update(@Param('kode') kode: string, @Body() dto: UpdateMatakuliahDto) {
-  try {
-  const updated = this.service.update(kode, dto);
-  if (!updated) {
-  throw new NotFoundException(
-  `Matakuliah dengan kode ${kode} tidak ditemukan`,
-  );
+
+  @Put(":id")
+  update(@Param("id") id: string, @Body() dto: UpdateMahasiswaDto) {
+    return this.service.update(+id, dto);
   }
-  return updated;
-  } catch (error) {
-  if (error instanceof Error) {
-  throw new BadRequestException(error.message);
+
+  @Delete(":id")
+  remove(@Param("id") id: string) {
+    return this.service.remove(+id);
   }
-  throw new BadRequestException('Terjadi kesalahan tak dikenal');
-  }
-  }
-  @Delete(':kode')
-  remove(@Param('kode') kode: string) {
-  const deleted = this.service.remove(kode);
-  if (!deleted) {
-  throw new NotFoundException(
-  `Matakuliah dengan kode ${kode} tidak ditemukan`,
-  );
-  }
-  return deleted;
-  }
-  }
+}

@@ -1,49 +1,46 @@
-/* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
-import { Matakuliah } from './entities/matakuliah.entity';
-import { CreateMatakuliahDto } from './dto/create-matakuliah.dto';
-import { UpdateMatakuliahDto } from './dto/update-matakuliah.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Mahasiswa } from "./entities/mahasiswa.entity";
+import { CreateMahasiswaDto } from "./dto/create-mahasiswa.dto";
+import { UpdateMahasiswaDto } from "./dto/update-mahasiswa.dto";
+
 @Injectable()
-export class MatakuliahService {
-private data: Matakuliah[] = [];
-create(dto: CreateMatakuliahDto): Matakuliah {
-const newMt = new Matakuliah(
-dto.kode,
-dto.nama,
-dto.sks,
-dto.semester,
-dto.jurusan,
-);
-this.data.push(newMt);
-return newMt;
-}
-findAll(): Matakuliah[] {
-return this.data;
-}
-findOne(kode: string): Matakuliah | undefined {
-return this.data.find((m) => m.kode === kode);
-}
-update(kode: string, dto: UpdateMatakuliahDto): Matakuliah | null {
-if (!dto.kode || !dto.nama || !dto.sks || !dto.semester || !dto.jurusan) {
-throw new Error('Semua field wajib diisi untuk update');
-}
-const index = this.data.findIndex((m) => m.kode === kode);
-if (index === -1) return null;
-const updated = new Matakuliah(
-dto.kode,
-dto.nama,
-dto.sks,
-dto.semester,
-dto.jurusan,
-);
-this.data[index] = updated;
-return updated;
-}
-remove(kode: string): Matakuliah | null {
-const index = this.data.findIndex((m) => m.kode === kode);
-if (index === -1) return null;
-const deleted = this.data[index];
-this.data.splice(index, 1);
-return deleted;
-}
+export class MahasiswaService {
+  constructor(
+    @InjectRepository(Mahasiswa)
+    private readonly repo: Repository<Mahasiswa>,
+  ) {}
+
+  findAll(): Promise<Mahasiswa[]> {
+    return this.repo.find();
+  }
+
+  async findOne(id: number): Promise<Mahasiswa> {
+    const data = await this.repo.findOneBy({ id });
+    if (!data) {
+      throw new NotFoundException(`Mahasiswa dengan ID ${id} tidak ditemukan`);
+    }
+    return data;
+  }
+
+  async create(dto: CreateMahasiswaDto): Promise<Mahasiswa> {
+    const mhs = this.repo.create(dto);
+    return this.repo.save(mhs);
+  }
+
+  async update(id: number, dto: UpdateMahasiswaDto): Promise<Mahasiswa> {
+    const existing = await this.repo.findOneBy({ id });
+    if (!existing) throw new NotFoundException("Mahasiswa tidak ditemukan");
+
+    const updated = this.repo.merge(existing, dto);
+    return this.repo.save(updated);
+  }
+
+  async remove(id: number): Promise<void> {
+    const result = await this.repo.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException("Mahasiswa tidak ditemukan");
+    }
+  }
 }
